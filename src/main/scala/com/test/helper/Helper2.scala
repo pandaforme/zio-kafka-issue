@@ -3,23 +3,30 @@ package com.test.helper
 import com.test.model.config.Helper2Config
 import com.test.model.{Model1, Model2, Model2Record}
 import io.circe.syntax._
+import io.jvm.uuid.UUID
 import org.apache.kafka.clients.producer.ProducerRecord
-import zio.ZIO
 import zio.blocking.Blocking
 import zio.clock.Clock
-import zio.config.{config, Config}
-import zio.kafka.consumer.{Consumer, Subscription}
-import zio.kafka.producer.Producer
+import zio.config.{Config, config}
+import zio.kafka.consumer.Consumer.{AutoOffsetStrategy, OffsetRetrieval}
+import zio.kafka.consumer.{Consumer, ConsumerSettings, Subscription}
+import zio.kafka.producer.{Producer, ProducerSettings}
 import zio.kafka.serde.Serde
-import zio.logging.{log, Logging}
+import zio.logging.{Logging, log}
+import zio.{ZIO, ZLayer}
 
 object Helper2 {
 
-  val consumeAndProduce: ZIO[Clock with Blocking with Logging with Config[
-    Helper2Config
-  ] with Consumer with Producer[Any, String, String], Throwable, Unit] =
+  val consumeAndProduce: ZIO[Clock with Blocking with Logging with Config[Helper2Config], Throwable, Unit] =
     for {
       config <- config[Helper2Config]
+      consumerSettings = ConsumerSettings(config.consumer.servers.map(_.value))
+        .withGroupId(config.consumer.groupId.value)
+        .withClientId(UUID.randomString)
+        .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
+      consumer = ZLayer.fromManaged(Consumer.make(consumerSettings))
+      producerSettings = ProducerSettings(config.producer.servers.map(_.value))
+      producer = ZLayer.fromManaged(Producer.make(producerSettings, Serde.string, Serde.string))
       _ <-
         Consumer
           .subscribeAnd(Subscription.topics(config.consumer.topic.value))
@@ -63,5 +70,6 @@ object Helper2 {
           .aggregateAsync(Consumer.offsetBatches)
           .mapM(_.commit)
           .runDrain
+          .provideSomeLayer[Clock with Blocking with Logging with Config[Helper2Config]](consumer ++ producer)
     } yield {}
 }

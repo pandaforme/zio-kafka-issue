@@ -2,21 +2,26 @@ package com.test.helper
 
 import com.test.model.Model2
 import com.test.model.config.Helper3Config
-import zio.ZIO
+import io.jvm.uuid.UUID
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.config.{config, Config}
-import zio.kafka.consumer.{Consumer, Subscription}
+import zio.kafka.consumer.Consumer.{AutoOffsetStrategy, OffsetRetrieval}
+import zio.kafka.consumer.{Consumer, ConsumerSettings, Subscription}
 import zio.kafka.serde.Serde
 import zio.logging.{log, Logging}
+import zio.{ZIO, ZLayer}
 
 object Helper3 {
 
-  val consume: ZIO[Clock with Blocking with Logging with Config[
-    Helper3Config
-  ] with Consumer, Throwable, Unit] =
+  val consume: ZIO[Clock with Blocking with Logging with Config[Helper3Config], Throwable, Unit] =
     for {
       config <- config[Helper3Config]
+      consumerSettings = ConsumerSettings(config.consumer.servers.map(_.value))
+        .withGroupId(config.consumer.groupId.value)
+        .withClientId(UUID.randomString)
+        .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
+      consumer = ZLayer.fromManaged(Consumer.make(consumerSettings))
       _ <-
         Consumer
           .subscribeAnd(Subscription.topics(config.consumer.topic.value))
@@ -35,5 +40,6 @@ object Helper3 {
           .aggregateAsync(Consumer.offsetBatches)
           .mapM(_.commit)
           .runDrain
+          .provideSomeLayer[Clock with Blocking with Logging with Config[Helper3Config]](consumer)
     } yield {}
 }

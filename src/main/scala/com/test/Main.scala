@@ -1,12 +1,9 @@
 package com.test
 
-import com.test.helper.{Helper1, Helper2, Helper3, KafkaHelper}
+import com.test.helper.{Helper1, Helper2, Helper3}
 import com.test.model.config.DummyServiceConfig
-import zio.blocking.Blocking
-import zio.clock.Clock
 import zio.config.syntax._
 import zio.config.typesafe.TypesafeConfig
-import zio.kafka.serde.Serde
 import zio.logging.log
 import zio.logging.slf4j.Slf4jLogger
 import zio.{App, ExitCode, ZIO, _}
@@ -23,23 +20,15 @@ object Main extends App {
 
     // helper
     val helper1 = {
-      val consumer = (helper1Config.narrow(_.consumer) ++ Clock.live ++ Blocking.live) >>> KafkaHelper.getConsumer
-      val producer =
-        helper1Config.narrow(_.producer) >>> KafkaHelper.getProducer(Serde.string, Serde.string)
-      helper1Config ++ logger ++ consumer ++ producer
+      helper1Config ++ logger
     }
 
     val helper2 = {
-      val consumer = (helper2Config.narrow(_.consumer) ++ Clock.live ++ Blocking.live) >>> KafkaHelper.getConsumer
-      val producer =
-        helper2Config.narrow(_.producer) >>> KafkaHelper.getProducer(Serde.string, Serde.string)
-      helper2Config ++ logger ++ consumer ++ producer
+      helper2Config ++ logger
     }
 
     val helper3 = {
-      val consumer =
-        (helper3Config.narrow(_.consumer) ++ Clock.live ++ Blocking.live) >>> KafkaHelper.getConsumer
-      helper3Config ++ logger ++ consumer
+      helper3Config ++ logger
     }
 
     ZIO

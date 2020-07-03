@@ -13,7 +13,7 @@ import zio.kafka.serde.Serde
 
 object KafkaHelper {
 
-  val getConsumer: ZLayer[Clock with Blocking with Config[KafkaConsumerConfig], Throwable, Consumer] =
+  def getConsumer: ZLayer[Clock with Blocking with Config[KafkaConsumerConfig], Throwable, Consumer] =
     ZLayer
       .fromServiceManaged[KafkaConsumerConfig, Clock with Blocking, Throwable, Consumer.Service] {
         config: KafkaConsumerConfig =>
@@ -22,7 +22,8 @@ object KafkaHelper {
             .withClientId(UUID.randomString)
             .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
           Consumer.make(consumerSettings)
-      }.fresh
+      }
+      .fresh
 
   def getProducer[K: Tag, V: Tag](
     keySerializer: Serde[Any, K],

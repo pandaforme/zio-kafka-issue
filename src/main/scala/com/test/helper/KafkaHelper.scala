@@ -22,7 +22,7 @@ object KafkaHelper {
             .withClientId(UUID.randomString)
             .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
           Consumer.make(consumerSettings)
-      }
+      }.fresh
 
   def getProducer[K: Tag, V: Tag](
     keySerializer: Serde[Any, K],
@@ -31,5 +31,5 @@ object KafkaHelper {
     ZLayer.fromServiceManaged { config: KafkaProducerConfig =>
       val producerSettings = ProducerSettings(config.servers.map(_.value))
       Producer.make(producerSettings, keySerializer, valueSerializer)
-    }
+    }.fresh
 }

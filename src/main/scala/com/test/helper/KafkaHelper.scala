@@ -2,7 +2,6 @@ package com.test.helper
 
 import com.test.model.config.{KafkaConsumerConfig, KafkaProducerConfig}
 import io.jvm.uuid.UUID
-import zio.{ZLayer, _}
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.config.Config
@@ -10,10 +9,11 @@ import zio.kafka.consumer.Consumer.{AutoOffsetStrategy, OffsetRetrieval}
 import zio.kafka.consumer.{Consumer, ConsumerSettings}
 import zio.kafka.producer.{Producer, ProducerSettings}
 import zio.kafka.serde.Serde
+import zio.{ZLayer, _}
 
 object KafkaHelper {
 
-  val getConsumer: ZLayer[Clock with Blocking with Config[KafkaConsumerConfig], Throwable, Consumer] =
+  def getConsumer: ZLayer[Clock with Blocking with Config[KafkaConsumerConfig], Throwable, Consumer] =
     ZLayer
       .fromServiceManaged[KafkaConsumerConfig, Clock with Blocking, Throwable, Consumer.Service] {
         config: KafkaConsumerConfig =>

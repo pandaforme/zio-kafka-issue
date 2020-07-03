@@ -1,0 +1,8 @@
+addSbtPlugin("org.scalameta"             % "sbt-scalafmt"        % "2.4.0")
+addSbtPlugin("pl.project13.scala"        % "sbt-jmh"             % "0.3.7")
+addSbtPlugin("org.scoverage"             % "sbt-scoverage"       % "1.6.1")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"        % "0.1.13")
+addSbtPlugin("com.typesafe.sbt"          % "sbt-native-packager" % "1.7.3")
+addSbtPlugin("ch.epfl.scala"             % "sbt-scalafix"        % "0.9.17")
+addSbtPlugin("org.wartremover"           % "sbt-wartremover"     % "2.4.9")
+addSbtPlugin("org.scoverage"             % "sbt-scoverage"       % "1.6.1")
